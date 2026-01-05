@@ -3,6 +3,7 @@ from playwright.sync_api import sync_playwright
 
 URLS = [
     "https://marketplace.nvidia.com/pl-pl/consumer/graphics-cards/nvidia-geforce-rtx-5090/",
+    "https://marketplace.nvidia.com/pl-pl/consumer/graphics-cards/geforce-rtx-3050-ventus-2x-xs-oc-8gb-gddr6/"
 ]
 
 OUT_OF_STOCK_PHRASES = [
