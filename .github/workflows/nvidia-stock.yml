@@ -25,7 +25,7 @@ jobs:
           pip install playwright==1.49.0
           playwright install firefox
 
-            - name: Run checker
+      - name: Run checker
         run: |
           python check_nvidia.py
 
