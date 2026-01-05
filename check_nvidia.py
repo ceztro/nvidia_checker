@@ -1,12 +1,8 @@
 import json
-import os
-from pathlib import Path
 from playwright.sync_api import sync_playwright
 
 URLS = [
-    #"https://marketplace.nvidia.com/pl-pl/consumer/graphics-cards/nvidia-geforce-rtx-5090/",
-    # add more URLs here:
-    "https://marketplace.nvidia.com/pl-pl/consumer/graphics-cards/gainward-geforce-rtx-5070-phoenix-12gb-dlss-4/"
+    "https://marketplace.nvidia.com/pl-pl/consumer/graphics-cards/gainward-geforce-rtx-5070-phoenix-12gb-dlss-4/",
 ]
 
 OUT_OF_STOCK_PHRASES = [
@@ -25,8 +21,6 @@ IN_STOCK_PHRASES = [
     "buy now",
 ]
 
-STATE_PATH = Path(os.environ.get("STATE_PATH", ".state/state.json"))
-
 def fetch_visible_text_firefox(url: str) -> str:
     with sync_playwright() as p:
         browser = p.firefox.launch(headless=True)
@@ -44,45 +38,23 @@ def classify(text_lower: str):
         return True, "in_stock_phrase"
     return None, "unknown_state"
 
-def load_state():
-    if STATE_PATH.exists():
-        try:
-            return json.loads(STATE_PATH.read_text(encoding="utf-8"))
-        except Exception:
-            return {}
-    return {}
-
-def save_state(state: dict):
-    STATE_PATH.parent.mkdir(parents=True, exist_ok=True)
-    STATE_PATH.write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
-
 def main():
-    prev = load_state()  # {url: true/false/None}
-
     results = []
-    became_in_stock = []  # URLs that changed from not-true -> true
+    in_stock_urls = []
 
     for url in URLS:
         text = fetch_visible_text_firefox(url)
         available, reason = classify(text)
-
         results.append({"url": url, "available": available, "reason": reason})
+        if available is True:
+            in_stock_urls.append(url)
 
-        old = prev.get(url)
-        if available is True and old is not True:
-            became_in_stock.append(url)
+    # Print JSON for logs
+    print(json.dumps({"results": results, "in_stock_urls": in_stock_urls}, ensure_ascii=False))
 
-        prev[url] = available
-
-    save_state(prev)
-
-    # Print results for logs
-    print(json.dumps({"results": results, "became_in_stock": became_in_stock}, ensure_ascii=False, indent=2))
-
-    # Write a small flag file for the workflow step to read
-    flag_path = Path(os.environ.get("FLAG_PATH", ".state/in_stock_urls.txt"))
-    flag_path.parent.mkdir(parents=True, exist_ok=True)
-    flag_path.write_text("\n".join(became_in_stock) + ("\n" if became_in_stock else ""), encoding="utf-8")
+    # Write a simple file the workflow can read
+    with open("in_stock_urls.txt", "w", encoding="utf-8") as f:
+        f.write("\n".join(in_stock_urls) + ("\n" if in_stock_urls else ""))
 
 if __name__ == "__main__":
     main()
