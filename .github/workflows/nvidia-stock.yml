@@ -25,20 +25,11 @@ jobs:
           pip install playwright==1.49.0
           playwright install firefox
 
-      # Restore last state from cache so we only email on changes
-      - name: Restore state cache
-        uses: actions/cache/restore@v4
-        with:
-          path: .state
-          key: nvidia-stock-state
-          restore-keys: |
-            nvidia-stock-state
-
-      - name: Run checker
+            - name: Run checker
         run: |
           python check_nvidia.py
 
-      - name: Send email if something became IN STOCK
+      - name: Send email if IN STOCK (every run)
         env:
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
@@ -47,20 +38,10 @@ jobs:
           MAIL_TO: ${{ secrets.MAIL_TO }}
           MAIL_FROM: ${{ secrets.MAIL_FROM }}
         run: |
-          if [ -s ".state/in_stock_urls.txt" ]; then
-            echo "IN STOCK changes detected:"
-            cat .state/in_stock_urls.txt
-
-            export MAIL_SUBJECT="✅ NVIDIA stock checker: IN STOCK detected"
-            export MAIL_BODY="The following URL(s) just became IN STOCK:\n\n$(cat .state/in_stock_urls.txt)\n\nTime: $(date -u) UTC"
+          if [ -s "in_stock_urls.txt" ]; then
+            export MAIL_SUBJECT="✅ NVIDIA stock checker: IN STOCK"
+            export MAIL_BODY="IN STOCK right now:\n\n$(cat in_stock_urls.txt)\n\nTime: $(date -u) UTC"
             python send_email.py
           else
-            echo "No new IN STOCK transitions."
+            echo "Nothing in stock."
           fi
-
-      # Save updated state back to cache
-      - name: Save state cache
-        uses: actions/cache/save@v4
-        with:
-          path: .state
-          key: nvidia-stock-state
