@@ -1,0 +1,66 @@
+name: NVIDIA Stock Check (Email)
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Playwright + Firefox
+        run: |
+          python -m pip install --upgrade pip
+          pip install playwright==1.49.0
+          playwright install firefox
+
+      # Restore last state from cache so we only email on changes
+      - name: Restore state cache
+        uses: actions/cache/restore@v4
+        with:
+          path: .state
+          key: nvidia-stock-state
+          restore-keys: |
+            nvidia-stock-state
+
+      - name: Run checker
+        run: |
+          python check_nvidia.py
+
+      - name: Send email if something became IN STOCK
+        env:
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          MAIL_TO: ${{ secrets.MAIL_TO }}
+          MAIL_FROM: ${{ secrets.MAIL_FROM }}
+        run: |
+          if [ -s ".state/in_stock_urls.txt" ]; then
+            echo "IN STOCK changes detected:"
+            cat .state/in_stock_urls.txt
+
+            export MAIL_SUBJECT="✅ NVIDIA stock checker: IN STOCK detected"
+            export MAIL_BODY="The following URL(s) just became IN STOCK:\n\n$(cat .state/in_stock_urls.txt)\n\nTime: $(date -u) UTC"
+            python send_email.py
+          else
+            echo "No new IN STOCK transitions."
+          fi
+
+      # Save updated state back to cache
+      - name: Save state cache
+        uses: actions/cache/save@v4
+        with:
+          path: .state
+          key: nvidia-stock-state
