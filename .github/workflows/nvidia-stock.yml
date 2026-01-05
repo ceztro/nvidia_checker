@@ -2,7 +2,7 @@ name: NVIDIA Stock Check (Email)
 
 on:
   schedule:
-    - cron: "*/3 * * * *"
+    - cron: "*/5 * * * *"
   workflow_dispatch:
 
 jobs:
