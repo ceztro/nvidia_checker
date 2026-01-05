@@ -4,9 +4,9 @@ from pathlib import Path
 from playwright.sync_api import sync_playwright
 
 URLS = [
-    "https://marketplace.nvidia.com/pl-pl/consumer/graphics-cards/nvidia-geforce-rtx-5090/",
+    #"https://marketplace.nvidia.com/pl-pl/consumer/graphics-cards/nvidia-geforce-rtx-5090/",
     # add more URLs here:
-    # "https://marketplace.nvidia.com/pl-pl/consumer/graphics-cards/geforce-rtx-5070-twin-x2-oc-12gb-gddr7-dlss4/",
+    "https://marketplace.nvidia.com/pl-pl/consumer/graphics-cards/gainward-geforce-rtx-5070-phoenix-12gb-dlss-4/"
 ]
 
 OUT_OF_STOCK_PHRASES = [
