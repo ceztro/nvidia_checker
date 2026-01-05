@@ -2,7 +2,7 @@ import json
 from playwright.sync_api import sync_playwright
 
 URLS = [
-    "https://marketplace.nvidia.com/pl-pl/consumer/graphics-cards/gainward-geforce-rtx-5070-phoenix-12gb-dlss-4/",
+    "https://marketplace.nvidia.com/pl-pl/consumer/graphics-cards/nvidia-geforce-rtx-5090/",
 ]
 
 OUT_OF_STOCK_PHRASES = [
